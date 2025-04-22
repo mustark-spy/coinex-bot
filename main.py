@@ -12,6 +12,7 @@ from telegram_listener import start_telegram_listener
 
 load_dotenv()
 
+os.environ['BOT_API_SKIP_UPDATES'] = 'True'
 symbol = os.getenv("TRADE_SYMBOL")
 amount_usdt = float(os.getenv("TRADE_AMOUNT_USDT"))
 rsi_period = int(os.getenv("RSI_PERIOD"))
