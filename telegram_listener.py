@@ -48,6 +48,8 @@ def get_signal_message():
     ema_fast = int(os.getenv("EMA_FAST"))
     ema_slow = int(os.getenv("EMA_SLOW"))
     period = os.getenv("TIMEFRAME")
+    rsi_overbought = float(os.getenv("RSI_OVERBOUGHT", 70))
+    rsi_oversold = float(os.getenv("RSI_OVERSOLD", 30))
 
     coinex = CoinExAPI()
     candles = coinex.get_ohlcv(symbol, period=period, limit=300)
@@ -65,9 +67,9 @@ def get_signal_message():
 
     rsi_value = latest["RSI"]
     signal = ""
-    if rsi_value < 30 and trend == "HAUSSIÈRE":
+    if rsi_value < rsi_oversold and trend == "HAUSSIÈRE":
         signal = "Signal possible : LONG"
-    elif rsi_value > 70 and trend == "BAISSIÈRE":
+    elif rsi_value > rsi_overbought and trend == "BAISSIÈRE":
         signal = "Signal possible : SHORT"
     else:
         signal = "Pas de signal immédiat."
