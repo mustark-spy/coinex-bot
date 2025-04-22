@@ -24,6 +24,8 @@ sl_atr_mult = float(os.getenv("SL_ATR_MULTIPLIER"))
 allowed_hours = list(map(int, os.getenv("ALLOWED_HOURS", "").split(",")))
 rsi_overbought = float(os.getenv("RSI_OVERBOUGHT", 70))
 rsi_oversold = float(os.getenv("RSI_OVERSOLD", 30))
+use_ema200 = os.getenv("USE_EMA200_FILTER", "true").lower() == "true"
+
 
 coinex = CoinExAPI()
 
@@ -89,12 +91,12 @@ EMA200 : {latest['EMA_200']:.2f}
 
         side = None
         reason = ""
-        if latest["RSI"] < rsi_oversold and latest["EMA_fast"] > latest["EMA_slow"] and latest["close"] > latest["EMA_200"]:
+        if latest["RSI"] < rsi_oversold and latest["EMA_fast"] > latest["EMA_slow"] and (not use_ema200 or latest["close"] > latest["EMA_200"]):
             side = 1
-            reason = f"RSI ({latest['RSI']:.2f}) < {rsi_oversold} + EMA{ema_fast} > EMA{ema_slow} + Prix > EMA200"
-        elif latest["RSI"] > rsi_overbought and latest["EMA_fast"] < latest["EMA_slow"] and latest["close"] < latest["EMA_200"]:
+            reason = f"RSI ({latest['RSI']:.2f}) < {rsi_oversold} + EMA{ema_fast} > EMA{ema_slow}" + (" + Prix > EMA200" if use_ema200 else "")
+        elif latest["RSI"] > rsi_overbought and latest["EMA_fast"] < latest["EMA_slow"] and (not use_ema200 or latest["close"] < latest["EMA_200"]):
             side = 2
-            reason = f"RSI ({latest['RSI']:.2f}) > {rsi_overbought} + EMA{ema_fast} < EMA{ema_slow} + Prix < EMA200"
+            reason = f"RSI ({latest['RSI']:.2f}) > {rsi_overbought} + EMA{ema_fast} < EMA{ema_slow}" + (" + Prix < EMA200" if use_ema200 else "")
 
         if side:
             direction = "📈 LONG" if side == 1 else "📉 SHORT"
