@@ -26,6 +26,7 @@ rsi_overbought = float(os.getenv("RSI_OVERBOUGHT", 70))
 rsi_oversold = float(os.getenv("RSI_OVERSOLD", 30))
 use_ema200 = os.getenv("USE_EMA200_FILTER", "true").lower() == "true"
 rsi_extreme_overbought = float(os.getenv("RSI_EXTREME_OVERBOUGHT", 90))
+rsi_extreme_oversold = float(os.getenv("RSI_EXTREME_OVERSOLD", 20))
 
 
 
@@ -103,6 +104,9 @@ EMA200 : {latest['EMA_200']:.2f}
         elif latest["RSI"] > rsi_extreme_overbought:
             side = 2
             reason = f"RSI ({latest['RSI']:.2f}) dépasse {rsi_extreme_overbought} : condition de surachat extrême (SHORT forcé)"
+        elif latest["RSI"] > rsi_extreme_oversold:
+            side = 1
+            reason = f"RSI ({latest['RSI']:.2f}) dépasse {rsi_extreme_oversold} : condition de survente extrême (LONG forcé)"
         if side:
             direction = "📈 LONG" if side == 1 else "📉 SHORT"
             message += f"\n✅ Signal détecté : {direction}\n📌 Critères validés :\n{reason}"
