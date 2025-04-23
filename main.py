@@ -104,9 +104,9 @@ EMA200 : {latest['EMA_200']:.2f}
         elif latest["RSI"] > rsi_extreme_overbought:
             side = 2
             reason = f"RSI ({latest['RSI']:.2f}) dépasse {rsi_extreme_overbought} : condition de surachat extrême (SHORT forcé)"
-        elif latest["RSI"] > rsi_extreme_oversold:
+        elif latest["RSI"] < rsi_extreme_oversold:
             side = 1
-            reason = f"RSI ({latest['RSI']:.2f}) dépasse {rsi_extreme_oversold} : condition de survente extrême (LONG forcé)"
+            reason = f"RSI ({latest['RSI']:.2f}) est inférieur {rsi_extreme_oversold} : condition de survente extrême (LONG forcé)"
         if side:
             direction = "📈 LONG" if side == 1 else "📉 SHORT"
             message += f"\n✅ Signal détecté : {direction}\n📌 Critères validés :\n{reason}"
