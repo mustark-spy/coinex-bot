@@ -102,7 +102,7 @@ def get_signal_message():
 
     if rsi > rsi_extreme_short:
         signal = f"⚠️ RSI extrême surachat détecté ({rsi:.2f}) ➜ SHORT forcé possible."
-    elif rsi > rsi_extreme_long:
+    elif rsi < rsi_extreme_long:
         signal = f"⚠️ RSI extrême survente détecté ({rsi:.2f}) ➜ LONG forcé possible."
     elif long_ready:
         signal = "✅ Signal LONG détecté (toutes conditions remplies)"
