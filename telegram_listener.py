@@ -50,7 +50,8 @@ def get_signal_message():
     period = os.getenv("TIMEFRAME")
     rsi_overbought = float(os.getenv("RSI_OVERBOUGHT", 70))
     rsi_oversold = float(os.getenv("RSI_OVERSOLD", 30))
-    rsi_extreme = float(os.getenv("RSI_EXTREME_OVERBOUGHT", 90))
+    rsi_extreme_short = float(os.getenv("RSI_EXTREME_OVERBOUGHT", 90))
+    rsi_extreme_long = float(os.getenv("RSI_EXTREME_OVERSOLD", 20))
     use_ema200 = os.getenv("USE_EMA200_FILTER", "true").lower() == "true"
 
     coinex = CoinExAPI()
@@ -99,8 +100,10 @@ def get_signal_message():
     signal = "🔍 Conditions pour LONG :\n" + format_conditions(long_conditions)
     signal += "\n\n🔍 Conditions pour SHORT :\n" + format_conditions(short_conditions)
 
-    if rsi > rsi_extreme:
-        signal = f"⚠️ RSI extrême détecté ({rsi:.2f}) ➜ SHORT forcé possible."
+    if rsi > rsi_extreme_short:
+        signal = f"⚠️ RSI extrême surachat détecté ({rsi:.2f}) ➜ SHORT forcé possible."
+    elif rsi > rsi_extreme_long:
+        signal = f"⚠️ RSI extrême survente détecté ({rsi:.2f}) ➜ LONG forcé possible."
     elif long_ready:
         signal = "✅ Signal LONG détecté (toutes conditions remplies)"
     elif short_ready:
