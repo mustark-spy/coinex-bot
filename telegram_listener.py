@@ -50,6 +50,8 @@ def get_signal_message():
     period = os.getenv("TIMEFRAME")
     rsi_overbought = float(os.getenv("RSI_OVERBOUGHT", 70))
     rsi_oversold = float(os.getenv("RSI_OVERSOLD", 30))
+    rsi_extreme = float(os.getenv("RSI_EXTREME_OVERBOUGHT", 90))
+    use_ema200 = os.getenv("USE_EMA200_FILTER", "true").lower() == "true"
 
     coinex = CoinExAPI()
     candles = coinex.get_ohlcv(symbol, period=period, limit=300)
@@ -64,23 +66,56 @@ def get_signal_message():
     latest = df.iloc[-1]
 
     trend = "HAUSSIÈRE" if latest["EMA_fast"] > latest["EMA_slow"] else "BAISSIÈRE" if latest["EMA_fast"] < latest["EMA_slow"] else "NEUTRE"
+    rsi = latest["RSI"]
+    price = latest["close"]
+    ema200 = latest["EMA_200"]
 
-    rsi_value = latest["RSI"]
-    signal = ""
-    if rsi_value < rsi_oversold and trend == "HAUSSIÈRE":
-        signal = "Signal possible : LONG"
-    elif rsi_value > rsi_overbought and trend == "BAISSIÈRE":
-        signal = "Signal possible : SHORT"
+    # Vérifications détaillées
+    conditions = []
+
+    # Conditions LONG
+    long_conditions = [
+        ("RSI < RSI_OVERSOLD", rsi < rsi_oversold),
+        (f"EMA{ema_fast} > EMA{ema_slow}", latest["EMA_fast"] > latest["EMA_slow"]),
+    ]
+    if use_ema200:
+        long_conditions.append(("Prix > EMA200", price > ema200))
+
+    # Conditions SHORT
+    short_conditions = [
+        ("RSI > RSI_OVERBOUGHT", rsi > rsi_overbought),
+        (f"EMA{ema_fast} < EMA{ema_slow}", latest["EMA_fast"] < latest["EMA_slow"]),
+    ]
+    if use_ema200:
+        short_conditions.append(("Prix < EMA200", price < ema200))
+
+    # Diagnostic
+    def format_conditions(conditions):
+        return "\n".join([f"✅ {label}" if status else f"❌ {label}" for label, status in conditions])
+
+    long_ready = all(c[1] for c in long_conditions)
+    short_ready = all(c[1] for c in short_conditions)
+
+    signal = "🔍 Conditions pour LONG :\n" + format_conditions(long_conditions)
+    signal += "\n\n🔍 Conditions pour SHORT :\n" + format_conditions(short_conditions)
+
+    if rsi > rsi_extreme:
+        signal = f"⚠️ RSI extrême détecté ({rsi:.2f}) ➜ SHORT forcé possible."
+    elif long_ready:
+        signal = "✅ Signal LONG détecté (toutes conditions remplies)"
+    elif short_ready:
+        signal = "✅ Signal SHORT détecté (toutes conditions remplies)"
     else:
-        signal = "Pas de signal immédiat."
+        signal += f"\n\n⏳ Aucune condition complète pour trader (RSI actuel : {rsi:.2f})"
 
     return f"""[Signal manuel]
 {symbol} ({period})
-RSI({rsi_period}) : {rsi_value:.2f}
+RSI({rsi_period}) : {rsi:.2f}
 EMA{ema_fast} : {latest['EMA_fast']:.2f}
 EMA{ema_slow} : {latest['EMA_slow']:.2f}
-EMA200 : {latest['EMA_200']:.2f}
+EMA200 : {ema200:.2f}
 Tendance : {trend}
+
 {signal}
 """
 
